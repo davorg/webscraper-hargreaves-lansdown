@@ -23,29 +23,21 @@ my $page = $resp->content;
 
 my ($vt) = $page =~ m|<input type="hidden" name="hl_vt" value="(\d+)"/>|;
 
-say $vt;
-
 $resp = $ua->post($url, {
   hl_vt => $vt,
   username => $ENV{HL_USERNAME},
   'date-of-birth' => $ENV{HL_DOB},
 });
 
-say $resp->code;
 if ($resp->is_redirect) {
-  say my $location = $resp->header('Location');
   $url = "$domain$path";
 }
 
 $resp = $ua->get($url2);
-say $resp->code;
-# say $resp->content;
 my @digits = $resp->content =~ /\sEnter the (\d).. digit/g;
 
 ($vt) = $page =~ m|<input type="hidden" name="hl_vt" value="(\d+)"/>|;
 
-say $vt;
-say "@digits";
 my $post = {
   hl_vt => $vt,
   'online-password-verification' => $ENV{HL_PASSWORD},
