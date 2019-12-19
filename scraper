@@ -13,7 +13,9 @@ my $ua = LWP::UserAgent->new(
 
 my $domain = 'https://online.hl.co.uk';
 my $path   = '/my-accounts/login-step-one';
+my $path2  = '/my-accounts/login-step-two';
 my $url    = "$domain$path";
+my $url2   = "$domain$path2";
 
 my $resp = $ua->get($url);
 my $page = $resp->content;
@@ -33,4 +35,18 @@ if ($resp->is_redirect) {
   say my $location = $resp->header('Location');
   $url = "$domain$path";
 }
-say $ua->cookie_jar->dump_cookies;
+
+$resp = $ua->get($url2);
+say $resp->code;
+say $resp->content;
+my @digits = $resp->content =~ /Enter the (\d).. digit/;
+say "@digits";
+my $post = {
+  hl_vt => $vt,
+  'online-password-verification' => $ENV{HL_PASSWORD},
+};
+
+
+
+$resp = $ua->post($url2, {
+});
