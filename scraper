@@ -1,0 +1,36 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+use feature 'say';
+
+use LWP::UserAgent;
+use HTTP::CookieJar::LWP;
+
+my $ua = LWP::UserAgent->new(
+  cookie_jar => HTTP::CookieJar::LWP->new,
+);
+
+my $domain = 'https://online.hl.co.uk';
+my $path   = '/my-accounts/login-step-one';
+my $url    = "$domain$path";
+
+my $resp = $ua->get($url);
+my $page = $resp->content;
+
+my ($vt) = $page =~ m|<input type="hidden" name="hl_vt" value="(\d+)"/>|;
+
+say $vt;
+
+$resp = $ua->post($url, {
+  hl_vt => $vt,
+  username => $ENV{HL_USERNAME},
+  'date-of-birth' => $ENV{HL_DOB},
+});
+
+say $resp->code;
+if ($resp->is_redirect) {
+  say my $location = $resp->header('Location');
+  $url = "$domain$path";
+}
+say $ua->cookie_jar->dump_cookies;
