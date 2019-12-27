@@ -8,10 +8,12 @@ use lib "$Bin/lib";
 
 use WebScraper::Hargreaves::Lansdown;
 
-my $hl = WebScraper::Hargreaves::Lansdown->new(
-  $ENV{HL_USERNAME}, $ENV{HL_DOB},
-  $ENV{HL_PASSWORD}, $ENV{HL_CODE},
-);
+my $hl = WebScraper::Hargreaves::Lansdown->new({
+  username => $ENV{HL_USERNAME},
+  dob      =>$ENV{HL_DOB},
+  password => $ENV{HL_PASSWORD},
+  code     => $ENV{HL_CODE},
+});
 
 $hl->overview;
 

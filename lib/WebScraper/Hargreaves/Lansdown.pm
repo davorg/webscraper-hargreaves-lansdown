@@ -4,26 +4,31 @@ use strict;
 use warnings;
 use feature 'say';
 
+use Moose;
 use LWP::UserAgent;
 use HTTP::CookieJar::LWP;
 use HTML::TableExtract;
 
-sub ua {
-  my $self = shift;
+has ua => (
+  isa => 'LWP::UserAgent',
+  is => 'ro',
+  lazy_build => 1,
+);
 
-  $self->{ua} = $_[0] if @_;
+has $_ => (
+  isa => 'Str',
+  is => 'ro',
+  required => 1,
+) for qw[username password dob code];
 
-  return $self->{ua};
-}
-
-sub new {
-  my $class = shift;
-
-  my ($username, $dob, $password, $code) = @_;
-
-  my $ua = LWP::UserAgent->new(
+sub _build_ua {
+  return LWP::UserAgent->new(
     cookie_jar => HTTP::CookieJar::LWP->new,
   );
+}
+
+sub BUILD {
+  my $self = shift;
 
   my $domain = 'https://online.hl.co.uk';
   my $path   = '/my-accounts/login-step-one';
@@ -31,41 +36,37 @@ sub new {
   my $url    = "$domain$path";
   my $url2   = "$domain$path2";
 
-  my $resp = $ua->get($url);
+  my $resp = $self->ua->get($url);
   my $page = $resp->content;
 
   my ($vt) = $page =~ m|<input type="hidden" name="hl_vt" value="(\d+)"/>|;
 
-  $resp = $ua->post($url, {
+  $resp = $self->ua->post($url, {
     hl_vt => $vt,
-    username => $username,
-    'date-of-birth' => $dob,
+    username => $self->username,
+    'date-of-birth' => $self->dob,
   });
 
   if ($resp->is_redirect) {
     $url = "$domain$path";
   }
 
-  $resp = $ua->get($url2);
+  $resp = $self->ua->get($url2);
   my @digits = $resp->content =~ /\sEnter the (\d).. digit/g;
 
   ($vt) = $page =~ m|<input type="hidden" name="hl_vt" value="(\d+)"/>|;
 
   my $post = {
     hl_vt => $vt,
-    'online-password-verification' => $password,
+    'online-password-verification' => $self->password,
   };
 
   for (0 .. 2) {
     my $input_name = 'secure-number[' . ($_ + 1) . ']';
-    $post->{$input_name} = substr $code, $digits[$_] - 1, 1;
+    $post->{$input_name} = substr $self->code, $digits[$_] - 1, 1;
   }
 
-  $resp = $ua->post($url2, $post);
-
-  return bless {
-    ua => $ua,
-  }, $class;
+  $resp = $self->ua->post($url2, $post);
 }
 
 sub overview {
