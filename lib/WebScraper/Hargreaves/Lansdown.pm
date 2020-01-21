@@ -84,7 +84,7 @@ sub overview {
 
   foreach my $ts ($te->tables) {
     foreach my $row ($ts->rows) {
-      say join(',', map { $_ = trim($_) } @$row);
+      say join('|', map { $_ = trim($_) } @$row);
     }
   }
 }
